@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>奥地利大饭店 - Grand Austria Hotel</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .game-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            padding: 30px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #764ba2;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+
+        .player-indicator {
+            text-align: center;
+            padding: 15px;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 10px;
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+
+        .player-tabs {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .player-tab {
+            padding: 12px 30px;
+            background: #dfe6e9;
+            border: 3px solid #b2bec3;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+        }
+
+        .player-tab.active {
+            background: #74b9ff;
+            border-color: #0984e3;
+            transform: scale(1.1);
+        }
+
+        .player-tab:hover {
+            background: #b2bec3;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+
+        .game-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .info-item {
+            text-align: center;
+            padding: 10px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .info-label {
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .info-value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #764ba2;
+        }
+
+        .dice-area {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+            border-radius: 10px;
+        }
+
+        .dice-area h2 {
+            color: #d63031;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .dice-container {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .dice {
+            width: 70px;
+            height: 70px;
+            background: white;
+            border: 3px solid #333;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+        }
+
+        .dice:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+        }
+
+        .dice.selected {
+            background: #ffeaa7;
+            border-color: #fdcb6e;
+            transform: scale(1.1);
+        }
+
+        .dice.used {
+            opacity: 0.3;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        .action-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            font-size: 1em;
+            font-weight: bold;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 10px rgba(0,0,0,0.3);
+        }
+
+        .btn-primary {
+            background: #00b894;
+            color: white;
+        }
+
+        .btn-secondary {
+            background: #0984e3;
+            color: white;
+        }
+
+        .btn-danger {
+            background: #d63031;
+            color: white;
+        }
+
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .hotel-board {
+            margin-bottom: 30px;
+        }
+
+        .hotel-board h2 {
+            color: #0984e3;
+            margin-bottom: 15px;
+        }
+
+        .rooms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .room {
+            aspect-ratio: 1;
+            background: #dfe6e9;
+            border: 2px solid #636e72;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            padding: 5px;
+        }
+
+        .room:hover {
+            background: #b2bec3;
+            transform: scale(1.05);
+        }
+
+        .room.occupied {
+            background: #74b9ff;
+            border-color: #0984e3;
+        }
+
+        .room-number {
+            font-size: 0.8em;
+            color: #2d3436;
+            margin-bottom: 5px;
+        }
+
+        .room-guest {
+            font-size: 1.2em;
+        }
+
+        .guests-area {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .guests-area h2 {
+            color: #6c5ce7;
+            margin-bottom: 15px;
+        }
+
+        .guests-container {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .guest-card {
+            background: white;
+            border: 2px solid #6c5ce7;
+            border-radius: 8px;
+            padding: 15px;
+            min-width: 150px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .guest-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+        }
+
+        .guest-card.selected {
+            background: #a29bfe;
+            border-color: #6c5ce7;
+        }
+
+        .guest-name {
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #2d3436;
+        }
+
+        .guest-requirements {
+            font-size: 0.9em;
+            color: #636e72;
+        }
+
+        .guest-reward {
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px solid #dfe6e9;
+            font-weight: bold;
+            color: #00b894;
+        }
+
+        .resources-area {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+            padding: 20px;
+            background: #ffeaa7;
+            border-radius: 10px;
+        }
+
+        .resource {
+            text-align: center;
+            padding: 10px;
+            background: white;
+            border-radius: 8px;
+            border: 2px solid #fdcb6e;
+        }
+
+        .resource-icon {
+            font-size: 2em;
+            margin-bottom: 5px;
+        }
+
+        .resource-count {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #e17055;
+        }
+
+        .log-area {
+            margin-top: 20px;
+            padding: 15px;
+            background: #2d3436;
+            color: #dfe6e9;
+            border-radius: 8px;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+
+        .log-entry {
+            padding: 5px 0;
+            border-bottom: 1px solid #636e72;
+        }
+
+        .log-entry:last-child {
+            border-bottom: none;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.7);
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 500px;
+            text-align: center;
+        }
+
+        .modal-content h2 {
+            margin-bottom: 20px;
+            color: #764ba2;
+        }
+
+        .modal-content p {
+            margin-bottom: 20px;
+            font-size: 1.1em;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>🏨 奥地利大饭店</h1>
+        <p class="subtitle">Grand Austria Hotel - 网页版</p>
+
+        <!-- 模式选择（初始显示） -->
+        <div id="modeSelection" style="text-align: center; margin: 30px 0;">
+            <h2 style="margin-bottom: 20px;">选择游戏模式</h2>
+            <button class="btn btn-primary" onclick="startGame(1)" style="margin: 0 10px;">单人模式</button>
+            <button class="btn btn-secondary" onclick="startGame(2)" style="margin: 0 10px;">双人模式</button>
+        </div>
+
+        <!-- 游戏区域（初始隐藏） -->
+        <div id="gameArea" style="display: none;">
+        
+        <!-- 当前玩家指示器 -->
+        <div class="player-indicator" id="playerIndicator">当前玩家：玩家1 🎮</div>
+
+        <!-- 玩家切换标签 -->
+        <div class="player-tabs" id="playerTabs" style="display: none;">
+            <div class="player-tab active" onclick="switchPlayerView(0)">玩家1 👤</div>
+            <div class="player-tab" onclick="switchPlayerView(1)">玩家2 👥</div>
+        </div>
+
+        <!-- 游戏信息 -->
+        <div class="game-info">
+            <div class="info-item">
+                <div class="info-label">回合</div>
+                <div class="info-value" id="round">1</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">金钱</div>
+                <div class="info-value" id="money">10</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">分数</div>
+                <div class="info-value" id="score">0</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">员工</div>
+                <div class="info-value" id="staff">2</div>
+            </div>
+        </div>
+
+        <!-- 骰子区域 -->
+        <div class="dice-area">
+            <h2>🎲 行动骰子</h2>
+            <div class="dice-container" id="diceContainer"></div>
+            <div class="action-buttons">
+                <button class="btn btn-primary" id="rollDiceBtn" onclick="rollDice()">投掷骰子</button>
+                <button class="btn btn-secondary" id="useActionBtn" onclick="useSelectedDice()" disabled>使用选中的骰子</button>
+            </div>
+        </div>
+
+        <!-- 资源区域 -->
+        <div class="resources-area">
+            <div class="resource">
+                <div class="resource-icon">☕</div>
+                <div>咖啡</div>
+                <div class="resource-count" id="coffee">0</div>
+            </div>
+            <div class="resource">
+                <div class="resource-icon">🍰</div>
+                <div>蛋糕</div>
+                <div class="resource-count" id="cake">0</div>
+            </div>
+            <div class="resource">
+                <div class="resource-icon">🍷</div>
+                <div>红酒</div>
+                <div class="resource-count" id="wine">0</div>
+            </div>
+            <div class="resource">
+                <div class="resource-icon">🍝</div>
+                <div>主食</div>
+                <div class="resource-count" id="meal">0</div>
+            </div>
+        </div>
+
+        <!-- 客人区域 -->
+        <div class="guests-area">
+            <h2>👥 等待的客人</h2>
+            <div class="guests-container" id="guestsContainer"></div>
+            <div class="action-buttons">
+                <button class="btn btn-secondary" onclick="serveGuest()">接待选中的客人</button>
+            </div>
+        </div>
+
+        <!-- 酒店房间 -->
+        <div class="hotel-board">
+            <h2>🏨 酒店房间</h2>
+            <div class="rooms-grid" id="roomsGrid"></div>
+        </div>
+
+        <!-- 操作按钮 -->
+        <div class="action-buttons">
+            <button class="btn btn-danger" onclick="endTurn()">结束我的回合</button>
+            <button class="btn btn-secondary" onclick="resetGame()">重新开始</button>
+        </div>
+
+        <!-- 日志 -->
+        <div class="log-area" id="logArea"></div>
+        
+        </div><!-- 结束 gameArea -->
+    </div>
+
+    <!-- 游戏结束模态框 -->
+    <div class="modal" id="gameOverModal">
+        <div class="modal-content">
+            <h2>🎉 游戏结束！</h2>
+            <p id="finalScore"></p>
+            <button class="btn btn-primary" onclick="resetGame()">再玩一次</button>
+        </div>
+    </div>
+
+    <script>
+        // 游戏状态
+        const gameState = {
+            mode: 1, // 1=单人, 2=双人
+            round: 1,
+            maxRounds: 7,
+            currentPlayer: 0, // 当前玩家索引
+            viewingPlayer: 0, // 当前查看的玩家
+            players: [
+                {
+                    name: '玩家1',
+                    money: 10,
+                    score: 0,
+                    staff: 2,
+                    resources: { coffee: 0, cake: 0, wine: 0, meal: 0 },
+                    rooms: [],
+                    guests: [],
+                    selectedGuest: null
+                }
+            ],
+            dice: [],
+            selectedDice: null,
+            turnComplete: false
+        };
+
+        // 客人模板
+        const guestTemplates = [
+            { name: '商人', requirements: { coffee: 2, cake: 1 }, reward: 5, icon: '👔' },
+            { name: '贵族', requirements: { wine: 2, meal: 1 }, reward: 7, icon: '👑' },
+            { name: '艺术家', requirements: { coffee: 1, wine: 1 }, reward: 4, icon: '🎨' },
+            { name: '旅行者', requirements: { cake: 1, meal: 1 }, reward: 4, icon: '🎒' },
+            { name: '政客', requirements: { wine: 3 }, reward: 6, icon: '💼' },
+            { name: '作家', requirements: { coffee: 3 }, reward: 5, icon: '✍️' },
+            { name: '美食家', requirements: { meal: 2, wine: 1 }, reward: 6, icon: '🍽️' },
+            { name: '音乐家', requirements: { coffee: 1, cake: 1, wine: 1 }, reward: 8, icon: '🎵' }
+        ];
+
+        // 开始游戏
+        function startGame(mode) {
+            gameState.mode = mode;
+            
+            // 隐藏模式选择，显示游戏区域
+            document.getElementById('modeSelection').style.display = 'none';
+            document.getElementById('gameArea').style.display = 'block';
+            
+            // 如果是双人模式，添加第二个玩家
+            if (mode === 2) {
+                gameState.players.push({
+                    name: '玩家2',
+                    money: 10,
+                    score: 0,
+                    staff: 2,
+                    resources: { coffee: 0, cake: 0, wine: 0, meal: 0 },
+                    rooms: [],
+                    guests: [],
+                    selectedGuest: null
+                });
+                document.getElementById('playerTabs').style.display = 'flex';
+            }
+            
+            initGame();
+        }
+
+        // 初始化游戏
+        function initGame() {
+            // 为每个玩家初始化房间和客人
+            gameState.players.forEach(player => {
+                player.rooms = Array(12).fill(null).map((_, i) => ({
+                    id: i + 1,
+                    guest: null
+                }));
+                player.guests = [];
+                generateGuestsForPlayer(player);
+            });
+
+            // 渲染游戏界面
+            renderGame();
+            addLog('游戏开始！欢迎来到奥地利大饭店！');
+            if (gameState.mode === 2) {
+                addLog('🎮 双人模式：玩家轮流进行回合');
+            }
+            addLog(`${getCurrentPlayer().name}，投掷骰子开始你的回合吧！`);
+        }
+
+        // 获取当前玩家
+        function getCurrentPlayer() {
+            return gameState.players[gameState.currentPlayer];
+        }
+
+        // 获取查看中的玩家
+        function getViewingPlayer() {
+            return gameState.players[gameState.viewingPlayer];
+        }
+
+        // 切换查看的玩家
+        function switchPlayerView(playerIndex) {
+            gameState.viewingPlayer = playerIndex;
+            renderGame();
+            
+            // 更新标签样式
+            document.querySelectorAll('.player-tab').forEach((tab, index) => {
+                tab.classList.toggle('active', index === playerIndex);
+            });
+        }
+
+        // 为玩家生成客人
+        function generateGuestsForPlayer(player) {
+            const count = Math.min(4, 8 - player.guests.length);
+            for (let i = 0; i < count; i++) {
+                const template = guestTemplates[Math.floor(Math.random() * guestTemplates.length)];
+                player.guests.push({
+                    id: Date.now() + Math.random(),
+                    ...template
+                });
+            }
+        }
+
+        // 投掷骰子
+        function rollDice() {
+            gameState.dice = Array(6).fill(0).map(() => ({
+                value: Math.floor(Math.random() * 6) + 1,
+                used: false
+            }));
+            gameState.selectedDice = null;
+            gameState.turnComplete = false;
+            
+            addLog(`🎲 ${getCurrentPlayer().name}投掷骰子完成！`);
+            renderDice();
+            document.getElementById('rollDiceBtn').disabled = true;
+        }
+
+        // 选择骰子
+        function selectDice(index) {
+            if (gameState.dice[index].used) return;
+            
+            gameState.selectedDice = index;
+            renderDice();
+            document.getElementById('useActionBtn').disabled = false;
+        }
+
+        // 使用选中的骰子
+        function useSelectedDice() {
+            if (gameState.selectedDice === null) return;
+
+            const player = getCurrentPlayer();
+            const diceValue = gameState.dice[gameState.selectedDice].value;
+            gameState.dice[gameState.selectedDice].used = true;
+
+            // 根据骰子点数获取资源
+            const resourceTypes = ['coffee', 'cake', 'wine', 'meal'];
+            if (diceValue <= 4) {
+                const resource = resourceTypes[diceValue - 1];
+                player.resources[resource] += 2;
+                addLog(`✅ ${player.name}使用骰子${diceValue}，获得2个${getResourceName(resource)}！`);
+            } else if (diceValue === 5) {
+                player.money += 3;
+                addLog(`✅ ${player.name}使用骰子5，获得3金钱！`);
+            } else if (diceValue === 6) {
+                player.staff += 1;
+                addLog(`✅ ${player.name}使用骰子6，雇佣1名员工！`);
+            }
+
+            gameState.selectedDice = null;
+            document.getElementById('useActionBtn').disabled = true;
+            
+            // 检查是否所有骰子都用完了
+            if (gameState.dice.every(d => d.used)) {
+                addLog(`⏱️ ${player.name}的所有骰子已使用完毕！`);
+                gameState.turnComplete = true;
+            }
+
+            renderGame();
+        }
+
+        // 获取资源名称
+        function getResourceName(resource) {
+            const names = {
+                coffee: '咖啡',
+                cake: '蛋糕',
+                wine: '红酒',
+                meal: '主食'
+            };
+            return names[resource];
+        }
+
+        // 选择客人
+        function selectGuest(guestId) {
+            const player = getCurrentPlayer();
+            player.selectedGuest = guestId;
+            renderGuests();
+        }
+
+        // 接待客人
+        function serveGuest() {
+            const player = getCurrentPlayer();
+            
+            if (!player.selectedGuest) {
+                addLog('⚠️ 请先选择一个客人！');
+                return;
+            }
+
+            const guest = player.guests.find(g => g.id === player.selectedGuest);
+            if (!guest) return;
+
+            // 检查是否有足够的资源
+            let canServe = true;
+            for (const [resource, amount] of Object.entries(guest.requirements)) {
+                if (player.resources[resource] < amount) {
+                    canServe = false;
+                    addLog(`⚠️ 资源不足！需要${amount}个${getResourceName(resource)}`);
+                }
+            }
+
+            if (!canServe) return;
+
+            // 检查是否有空房间
+            const emptyRoom = player.rooms.find(r => r.guest === null);
+            if (!emptyRoom) {
+                addLog('⚠️ 没有空房间了！');
+                return;
+            }
+
+            // 扣除资源
+            for (const [resource, amount] of Object.entries(guest.requirements)) {
+                player.resources[resource] -= amount;
+            }
+
+            // 安排客人入住
+            emptyRoom.guest = guest;
+            player.score += guest.reward;
+            
+            addLog(`🎉 ${player.name}成功接待${guest.icon}${guest.name}，获得${guest.reward}分！`);
+
+            // 移除客人
+            player.guests = player.guests.filter(g => g.id !== player.selectedGuest);
+            player.selectedGuest = null;
+
+            // 生成新客人
+            if (player.guests.length < 4) {
+                generateGuestsForPlayer(player);
+            }
+
+            renderGame();
+        }
+
+        // 结束玩家的回合
+        function endTurn() {
+            const player = getCurrentPlayer();
+            
+            // 如果还有骰子没用完，提示玩家
+            if (gameState.dice.length > 0 && !gameState.turnComplete) {
+                if (!confirm('还有骰子未使用，确定要结束回合吗？')) {
+                    return;
+                }
+            }
+            
+            addLog(`✅ ${player.name}的回合结束`);
+            
+            // 双人模式：切换到下一个玩家
+            if (gameState.mode === 2) {
+                gameState.currentPlayer = (gameState.currentPlayer + 1) % 2;
+                
+                // 如果回到玩家1，说明一轮结束
+                if (gameState.currentPlayer === 0) {
+                    endRound();
+                } else {
+                    // 切换到下一个玩家
+                    addLog(`\n🔄 轮到${getCurrentPlayer().name}`);
+                    gameState.dice = [];
+                    gameState.selectedDice = null;
+                    document.getElementById('rollDiceBtn').disabled = false;
+                    gameState.viewingPlayer = gameState.currentPlayer;
+                    renderGame();
+                }
+            } else {
+                // 单人模式：直接结束回合
+                endRound();
+            }
+        }
+
+        // 结束回合
+        function endRound() {
+            gameState.round++;
+            
+            if (gameState.round > gameState.maxRounds) {
+                endGame();
+                return;
+            }
+
+            // 为每个玩家计算回合奖励
+            gameState.players.forEach(player => {
+                const occupiedRooms = player.rooms.filter(r => r.guest !== null).length;
+                const roundBonus = occupiedRooms * 2;
+                player.money += roundBonus;
+                player.score += Math.floor(occupiedRooms / 3);
+                addLog(`💰 ${player.name}入住奖励：${roundBonus}金钱`);
+            });
+
+            addLog(`\n🔄 回合${gameState.round - 1}结束！`);
+            
+            // 重置骰子
+            gameState.dice = [];
+            gameState.selectedDice = null;
+            gameState.currentPlayer = 0;
+            document.getElementById('rollDiceBtn').disabled = false;
+
+            renderGame();
+            addLog(`\n--- 回合 ${gameState.round} 开始 ---`);
+            addLog(`${getCurrentPlayer().name}，投掷骰子开始你的回合！`);
+        }
+
+        // 结束游戏
+        function endGame() {
+            let resultText = '🎊 游戏结束！\n\n';
+            
+            // 计算每个玩家的最终得分
+            gameState.players.forEach(player => {
+                const occupiedRooms = player.rooms.filter(r => r.guest !== null).length;
+                const finalBonus = occupiedRooms * 3 + Math.floor(player.money / 2);
+                player.score += finalBonus;
+                
+                resultText += `${player.name}:\n`;
+                resultText += `  得分：${player.score}分\n`;
+                resultText += `  入住房间：${occupiedRooms}/12\n\n`;
+                
+                addLog(`${player.name}最终得分：${player.score}分`);
+            });
+            
+            // 双人模式：判断胜者
+            if (gameState.mode === 2) {
+                const p1 = gameState.players[0];
+                const p2 = gameState.players[1];
+                if (p1.score > p2.score) {
+                    resultText += `🏆 ${p1.name}获胜！`;
+                } else if (p2.score > p1.score) {
+                    resultText += `🏆 ${p2.name}获胜！`;
+                } else {
+                    resultText += '🤝 平局！';
+                }
+            }
+
+            document.getElementById('finalScore').textContent = resultText;
+            document.getElementById('gameOverModal').classList.add('active');
+        }
+
+        // 重置游戏
+        function resetGame() {
+            // 重置所有状态
+            gameState.mode = 1;
+            gameState.round = 1;
+            gameState.currentPlayer = 0;
+            gameState.viewingPlayer = 0;
+            gameState.players = [
+                {
+                    name: '玩家1',
+                    money: 10,
+                    score: 0,
+                    staff: 2,
+                    resources: { coffee: 0, cake: 0, wine: 0, meal: 0 },
+                    rooms: [],
+                    guests: [],
+                    selectedGuest: null
+                }
+            ];
+            gameState.dice = [];
+            gameState.selectedDice = null;
+            gameState.turnComplete = false;
+
+            document.getElementById('gameOverModal').classList.remove('active');
+            document.getElementById('gameArea').style.display = 'none';
+            document.getElementById('modeSelection').style.display = 'block';
+            document.getElementById('playerTabs').style.display = 'none';
+            document.getElementById('logArea').innerHTML = '';
+        }
+
+        // 渲染游戏界面
+        function renderGame() {
+            const player = getViewingPlayer();
+            const currentPlayer = getCurrentPlayer();
+            
+            // 更新玩家指示器
+            document.getElementById('playerIndicator').textContent = 
+                `当前回合：${currentPlayer.name} 🎮 | 查看：${player.name}`;
+            
+            document.getElementById('round').textContent = gameState.round;
+            document.getElementById('money').textContent = player.money;
+            document.getElementById('score').textContent = player.score;
+            document.getElementById('staff').textContent = player.staff;
+
+            // 渲染资源
+            for (const [resource, count] of Object.entries(player.resources)) {
+                document.getElementById(resource).textContent = count;
+            }
+
+            renderDice();
+            renderGuests();
+            renderRooms();
+        }
+
+        // 渲染骰子
+        function renderDice() {
+            const container = document.getElementById('diceContainer');
+            container.innerHTML = '';
+
+            gameState.dice.forEach((dice, index) => {
+                const diceEl = document.createElement('div');
+                diceEl.className = 'dice';
+                if (dice.used) diceEl.classList.add('used');
+                if (gameState.selectedDice === index) diceEl.classList.add('selected');
+                diceEl.textContent = dice.value;
+                diceEl.onclick = () => selectDice(index);
+                container.appendChild(diceEl);
+            });
+        }
+
+        // 渲染客人
+        function renderGuests() {
+            const container = document.getElementById('guestsContainer');
+            container.innerHTML = '';
+            const player = getViewingPlayer();
+
+            player.guests.forEach(guest => {
+                const card = document.createElement('div');
+                card.className = 'guest-card';
+                if (player.selectedGuest === guest.id) {
+                    card.classList.add('selected');
+                }
+                
+                const requirements = Object.entries(guest.requirements)
+                    .map(([res, amt]) => `${getResourceName(res)}×${amt}`)
+                    .join(', ');
+
+                card.innerHTML = `
+                    <div class="guest-name">${guest.icon} ${guest.name}</div>
+                    <div class="guest-requirements">需要: ${requirements}</div>
+                    <div class="guest-reward">+${guest.reward}分</div>
+                `;
+                card.onclick = () => selectGuest(guest.id);
+                container.appendChild(card);
+            });
+        }
+
+        // 渲染房间
+        function renderRooms() {
+            const container = document.getElementById('roomsGrid');
+            container.innerHTML = '';
+            const player = getViewingPlayer();
+
+            player.rooms.forEach(room => {
+                const roomEl = document.createElement('div');
+                roomEl.className = 'room';
+                if (room.guest) {
+                    roomEl.classList.add('occupied');
+                }
+                
+                roomEl.innerHTML = `
+                    <div class="room-number">房间${room.id}</div>
+                    <div class="room-guest">${room.guest ? room.guest.icon : '🚪'}</div>
+                `;
+                container.appendChild(roomEl);
+            });
+        }
+
+        // 添加日志
+        function addLog(message) {
+            const logArea = document.getElementById('logArea');
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            entry.textContent = message;
+            logArea.appendChild(entry);
+            logArea.scrollTop = logArea.scrollHeight;
+        }
+
+        // 页面加载完成后准备游戏
+        // 不自动启动，等待玩家选择模式
+    </script>
+</body>
+</html>
